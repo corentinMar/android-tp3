@@ -740,7 +740,7 @@ Il ne nous reste plus qu'à créer notre base de données qui sera une classe ab
 
 ```kotlin
 @Database(entities = [User::class], version = 1, exportSchema = false)
-abstract class Database : RoomDatabase() {}
+abstract class MyDatabase : RoomDatabase() {}
 ```
 
 Grâce à l'annotation ```Database()```, on va définir les arguments permettant d'initialiser notre base de données. En premier lieu les ```entities``` (ici seulement la classe ```User```), la ```version``` de notre base (on devra l'augmenter à chaque modification de la base), et l'```exportSchema``` à ```false``` pour ne pas avoir de sauvegarde des différentes versions de base.
