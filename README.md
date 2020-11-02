@@ -1,5 +1,3 @@
-La version imagée : https://drive.google.com/file/d/1C-qMo0ZR_XnLw7t9SjSNbr066UHi_0PW/view?usp=sharing
-
 # TP3 Architecture d'application
 
 Il est temps de mettre un peu d'ordre et de découvrir plus en détail les composants d'architecture d'Android. Nous allons retrouver la séparation des préoccupations dans ce TP afin que chaque élément joue le rôle auquel il doit être affecté. 
@@ -17,7 +15,7 @@ Le ViewModel est la partie qui contient les données utilisées par la vue (acti
 On reprend notre TP 2 pour poursuivre nos améliorations et comme à chaque fois, il faut commencer par ajouter des dépendances :
 
 ```gradle
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
 ```
 
 <div style="page-break-after: always;"></div>
@@ -599,8 +597,8 @@ Sous Android, les données sont représentées dans des classes de données et l
 Pour ce faire, nous allons modifier notre modèle ```User``` et comme d'habitude, quelques modifications du fichier gradle sont necessaires :
 
 ```gradle
-implementation 'androidx.room:room-runtime:2.1.0'
-annotationProcessor 'androidx.room:room-compiler:2.1.0'
+implementation 'androidx.room:room-runtime:2.2.5'
+annotationProcessor 'androidx.room:room-compiler:2.2.5'
 implementation 'android.arch.persistence.room:runtime:1.1.1'
 annotationProcessor  'android.arch.persistence.room:compiler:1.1.1'
 kapt 'android.arch.persistence.room:compiler:1.1.1'
@@ -622,11 +620,7 @@ Il nous faut ensuite annoter une clé primaire et les différentes colonnes :
 
 @Keep
 @Entity(tableName = "user")
-data class User(@PrimaryKey(autoGenerate = true)
-                @ColumnInfo(name = "id")
-                private var _id: Long = 0L,
-                
-                @ColumnInfo(name = "lastname")
+data class User(@ColumnInfo(name = "lastname")
                 private var _lastname: String? = "",
 
                 @ColumnInfo(name = "firstname")
@@ -639,6 +633,9 @@ data class User(@PrimaryKey(autoGenerate = true)
                 private var _gender: String? = ""): Parcelable,
     BaseObservable() {
 
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    private var _id: Long = 0L
     var id: Long
         @Bindable get() = _id
         set(value) {
@@ -741,7 +738,7 @@ Il ne nous reste plus qu'à créer notre base de données qui sera une classe ab
 
 ```kotlin
 @Database(entities = [User::class], version = 1, exportSchema = false)
-abstract class MyDatabase : RoomDatabase() {}
+abstract class Database : RoomDatabase() {}
 ```
 
 Grâce à l'annotation ```Database()```, on va définir les arguments permettant d'initialiser notre base de données. En premier lieu les ```entities``` (ici seulement la classe ```User```), la ```version``` de notre base (on devra l'augmenter à chaque modification de la base), et l'```exportSchema``` à ```false``` pour ne pas avoir de sauvegarde des différentes versions de base.
@@ -873,8 +870,8 @@ Kotlin propose un système de coroutine qui permet donc d'effectuer des tâches 
 Comme à chaque fois, on doit déclarer quelques petites librairies :
 
 ```gradle
-implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1"
-implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.1.1"
+implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7"
+implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.0"
 ```
 
 Pour commencer, nous devons déclarer un ```Job```.  Celui-ci nous permettra d'annuler toutes les routines lancées par le ViewModel lorsque celui-ci ne sera plus utilisé et sera détruit. On annulera les coroutines lorsque le ViewModel sera nettoyé. Enfin, on définit un scope qui nous permettra de savoir sur quel thread on execute nos coroutines. Ici, ```Dispatchers.Main``` signifie que les coroutines seront exécutées sur le thread principal.
