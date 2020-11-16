@@ -1,7 +1,7 @@
 Version PDF : https://drive.google.com/file/d/1gZbt-9YIddbMt0GSKGmVlANt7Vq1ewA2/view?usp=sharing
 
 ** ATTENTION **
-Si vous ne l'avez pas vu, les dépenances ROOM ont changé :
+Si vous ne l'avez pas vu, les dépendances Dagger ont changé :
 ```gradle
 dependencies {
     ...
