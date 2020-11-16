@@ -1,3 +1,15 @@
+Version PDF : https://drive.google.com/file/d/1gZbt-9YIddbMt0GSKGmVlANt7Vq1ewA2/view?usp=sharing
+
+** ATTENTION **
+Si vous ne l'avez pas vu, les dépenances ROOM ont changé :
+```gradle
+dependencies {
+    ...
+    implementation 'com.google.dagger:dagger:2.25.3'
+    kapt 'com.google.dagger:dagger-compiler:2.25.3'
+}
+```
+
 # TP3 Architecture d'application
 
 Il est temps de mettre un peu d'ordre et de découvrir plus en détail les composants d'architecture d'Android. Nous allons retrouver la séparation des préoccupations dans ce TP afin que chaque élément joue le rôle auquel il doit être affecté. 
@@ -48,7 +60,8 @@ Quelque chose d'assez important : les fragments sont de ces éléments qui sont 
 Tant que le fragment ne sera pas détâché, le ViewModel existera. Il est créé la première fois, lorsqu'on l'attache au fragment. On ajoutera alors dans ```onCreateView()``` :
 
 ```kotlin
-viewModel = ViewModelProviders.of(this).get(IdentityViewModel::class.java)
+// viewModel = ViewModelProviders.of(this).get(IdentityViewModel::class.java) // depreciate
+viewModel = ViewModelProvider(this,viewModelFactory).get(IdentityViewModel::class.java)
 ```
 
 Avec les logs insérés, on verra lorsque notre ViewModel est créé ou détruit.
@@ -114,10 +127,13 @@ class PersonalDataFragment : Fragment(), PersonalDateEventListener {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_personal_data, container, false)
         binding.eventListener = this
 
-        val args = PersonalDataFragmentArgs.fromBundle(arguments!!)
+        val args = PersonalDataFragmentArgs.fromBundle(requireArguments())
         viewModelFactory = PersonalDataViewModelFactory(args.user) // initialisation du Factory
-        viewModel = ViewModelProviders.of(this, viewModelFactory)
-            .get(PersonalDataViewModel::class.java) // Initialisation du ViewModel
+        viewModel = ViewModelProvider(this,viewModelFactory).get(PersonalDataViewModel::class.java)// Initialisation du ViewModel
+
+       // viewModel = ViewModelProviders.of(this, viewModelFactory)
+         //   .get(PersonalDataViewModel::class.java) 
+         // depreciate
 
         binding.user = viewModel.user // Modification de l'initialisation du binding
 
@@ -437,10 +453,13 @@ class PersonalDataFragment : Fragment() { //, PersonalDateEventListener {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_personal_data, container, false)
 //        binding.eventListener = this
 
-        val args = PersonalDataFragmentArgs.fromBundle(arguments!!)
+        val args = PersonalDataFragmentArgs.fromBundle(requireArguments())
         viewModelFactory = PersonalDataViewModelFactory(args.user)
-        viewModel = ViewModelProviders.of(this, viewModelFactory)
-            .get(PersonalDataViewModel::class.java)
+        viewModel = ViewModelProvider(this,viewModelFactory).get(PersonalDataViewModel::class.java)
+
+        //viewModel = ViewModelProviders.of(this, viewModelFactory)
+        //    .get(PersonalDataViewModel::class.java)
+        // depreciate
 
         binding.viewModel = viewModel
 
@@ -500,14 +519,15 @@ Et ajouter une propriété sur le TextView de titre
 Mais essayez d'ajouter ceci également la propriété ```android:text="@{viewModel.user.firstname + ` ` +viewModel.user.lastname}"``` pour le TextView du premier fragment.
 Vous verrez que si vous modifiez les données du nom, le titre ne change pas. En fait, il faut aussi rendre l'objet observable.
 
-Ainsi, si vous modifiez votre modèle en lui ajoutant la notification des modificiations de propriétés, vous aurez un affichage des modifications en temps réel. Si des erreurs apparaissent notamment avec les variables associées à ```BR```, cliquez sur le petit marteau qui va rafraichir les données.
+Ainsi, si vous modifiez votre modèle en lui ajoutant la notification des modificiations de propriétés, vous aurez un affichage des modifications en temps réel. Si des erreurs apparaissent notamment avec les variables associées à ```BR```, cliquez sur le petit marteau qui va rafraichir les données. **Attention, pour l'import de la classe de data binding BR, il faudra inscrire le nom de votre package puis BR - exemple : ```import com.example.tp2.BR```**
 
 <div style="page-break-after: always;"></div>
+
 
 ```kotlin
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
-import androidx.databinding.library.baseAdapters.BR
+import com.example.tp2.BR
 
 
 @Keep
@@ -597,11 +617,9 @@ Sous Android, les données sont représentées dans des classes de données et l
 Pour ce faire, nous allons modifier notre modèle ```User``` et comme d'habitude, quelques modifications du fichier gradle sont necessaires :
 
 ```gradle
-implementation 'androidx.room:room-runtime:2.2.5'
-annotationProcessor 'androidx.room:room-compiler:2.2.5'
-implementation 'android.arch.persistence.room:runtime:1.1.1'
-annotationProcessor  'android.arch.persistence.room:compiler:1.1.1'
-kapt 'android.arch.persistence.room:compiler:1.1.1'
+implementation "androidx.room:room-runtime:2.2.5"
+kapt "androidx.room:room-compiler:2.2.5"
+implementation "androidx.room:room-ktx:2.2.5"
 ```
 
 Dans notre modèle ```User``` nous allons déjà déclarer le nom de notre table grâce aux annotations : 
@@ -854,9 +872,11 @@ On peut donc enfin instancier notre ViewModel (on aurait pu l'appeller UserViewM
 
 ```kotlin
 val viewModelFactory = IdentityViewModelFactory(dataSource, application)
-viewModel =
-    ViewModelProviders.of(
-        this, viewModelFactory).get(IdentityViewModel::class.java)
+// viewModel =
+//    ViewModelProviders.of(
+//        this, viewModelFactory).get(IdentityViewModel::class.java)
+// depreciate
+viewModel = ViewModelProvider(this,viewModelFactory).get(IdentityViewModel::class.java)
 ```
 
 En fait, on n'a plus vraiment besoin de se passer l'utilisateur de fragment en fragment. Découvrons maintenant un concept spécifique : les Coroutines.
@@ -1075,7 +1095,7 @@ Au niveau du Fragment, on supprime le code du ```onValidate```. On va observer n
 
 ```kotlin
 // Code qui remplace la fonction onValidate()
-viewModel.navigateToPersonalDataFragment.observe(this, Observer { user ->
+viewModel.navigateToPersonalDataFragment.observe(viewLifecycleOwner, Observer { user ->
     user?.let {
         this.findNavController().navigate(
             IdentityFragmentDirections
@@ -1116,7 +1136,7 @@ fun onValidate() {
 
 ```kotlin
 // Code qui remplace la fonction onValidate()
-viewModel.navigateToOtherActivity.observe(this, Observer { user ->
+viewModel.navigateToOtherActivity.observe(viewLifecycleOwner, Observer { user ->
     user?.let {
         val message = viewModel.user.value?.gender + " " + LongConverter.dateToString(viewModel.user.value?.birthdayDate?:0)
         Toast.makeText(this.context, message, Toast.LENGTH_SHORT).show()
