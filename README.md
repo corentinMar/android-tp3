@@ -768,6 +768,7 @@ abstract val userDao: UserDao
 ```
 
 Puis on retrouve l'objet ```companion``` du TP1. Au sein de celui-ci, on aura la création de l'accès à la base sous forme de singleton.
+Ce companion est à déclarer au sein de votre nouvelle classe abstraite ```Database```
 
 <div style="page-break-after: always;"></div>
 
