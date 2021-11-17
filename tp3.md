@@ -1135,6 +1135,13 @@ viewModel.navigateToOtherActivity.observe(viewLifecycleOwner, Observer { user ->
  })
 ```
 
+On va donc récupérer du côté de notre fragment `PersonalDataFragment` l'id pour pouvoir le fournir au ViewModel qui récupérera l'information en base de données. Notez qu'on ne devrait passer que l'id de l'utilisateur pour réduire la charge du bundle (ici on laisse ainsi pour simplifier la tâche et ne pas remodifier l'argument dans `navigation.xml`).
+
+```kotlin
+val args = PersonalDataFragmentArgs.fromBundle(arguments!!)
+val viewModelFactory = IdentityViewModelFactory(dataSource, application,args.user.id)
+```
+
 Nous avons désormais terminé la partie base de données.
 
 Pour en terminer rendez-vous ici : https://codelabs.developers.google.com/codelabs/kotlin-android-training-room-database/index.html?index=..%2F..android-kotlin-fundamentals#0
