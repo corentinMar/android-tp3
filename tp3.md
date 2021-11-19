@@ -626,7 +626,12 @@ Il nous faut ensuite annoter une clé primaire et les différentes colonnes :
 
 @Keep
 @Entity(tableName = "user")
-data class User(@ColumnInfo(name = "lastname")
+data class User(
+                @PrimaryKey(autoGenerate = true)
+                @ColumnInfo(name = "id")
+                private var _id: Long = 0L,
+
+                @ColumnInfo(name = "lastname")
                 private var _lastname: String? = "",
 
                 @ColumnInfo(name = "firstname")
@@ -639,9 +644,6 @@ data class User(@ColumnInfo(name = "lastname")
                 private var _gender: String? = ""): Parcelable,
     BaseObservable() {
 
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id")
-    private var _id: Long = 0L
     var id: Long
         @Bindable get() = _id
         set(value) {
